@@ -17,7 +17,6 @@ nlp = spacy.load("he_ner_news_trf")
 def organize_df(path):
     # Load the DataFrame
     df = pd.read_csv(path)
-    df = df[:100]
     relevant_column = "תוכן העדות בכתב (העתק או תמלול)"
     url_col = "קישור למקור (URL) / Identifier"
     url2 = "קישור לאתר / ערוץ (URL)"
