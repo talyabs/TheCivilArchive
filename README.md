@@ -33,7 +33,6 @@ For more details on the project, you can refer to the [detailed report](https://
 - **Note**: Please contact the repository owner to obtain the necessary GCP credentials for accessing the Google Sheets database.
 - Relevant code for Google Sheets access is in the file `gcp_service_account.py`.
 
-
 ---
 
 ## Synonyms Database
