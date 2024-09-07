@@ -14,7 +14,8 @@ This repository is dedicated to the Civil Archive project, focusing on Named Ent
 
 3. **Rule-Based Methods & Synonyms**: Applying rule-based approaches and a collection of synonyms maintained in a database, improving entity recognition accuracy through custom rules and pre-defined synonym mappings.
 
-For more details on the project, you can refer to the [detailed report](https://drive.google.com/file/d/1nG3YjFcVaCNNzDjI6V9snKZhQi8KGM-t/view?usp=sharing).
+- For more details on the project, you can refer to the [detailed report](https://drive.google.com/file/d/1nG3YjFcVaCNNzDjI6V9snKZhQi8KGM-t/view?usp=sharing).
+
 ---
 
 ## File Structure
@@ -32,7 +33,6 @@ For more details on the project, you can refer to the [detailed report](https://
 - The database for rules and synonyms is maintained in a Google Sheet, and the system connects to this sheet via **Google Cloud Platform (GCP)** credentials.
 - **Note**: Please contact the repository owner to obtain the necessary GCP credentials for accessing the Google Sheets database.
 - Relevant code for Google Sheets access is in the file `gcp_service_account.py`.
-
 
 ---
 
