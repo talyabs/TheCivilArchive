@@ -110,8 +110,7 @@ def find_entities(df):
         for entity in doc.ents:
             score = round(entity._.confidence_score, 2)
             if entity.label_ in ["PERS", "ORG", "LOC"]:
-                # entity_name = segment_preposition_letters(entity.text)
-                entity_name = entity.text
+                entity_name = segment_preposition_letters(entity.text)
             else:
                 entity_name = entity.text
 

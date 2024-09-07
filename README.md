@@ -69,9 +69,42 @@ pip install -r requirements.txt
    python classify_ner.py
    ```
 
-3. The classified entities and summary files will be saved in the `results` folder.
+3. The classified entities and summary files with entities id, will be saved as `{entity}_summary.csv` file.
 
 - For faster processing, it is recommended to run the model on a computer equipped with a GPU.
+
+---
+
+
+## Model Output
+
+The model identifies and extracts various types of entities from the testimonies, including both URL-based and Named Entity Recognition (NER) entities:
+
+- **URL-Based Entities**:
+  - **URL Domain**: Identifies the domain of the URL, which can provide insights into the "Publisher."
+  - **URL Title**: Extracts the title from the URL (possible only in a few cases).
+  - **URL Profile**: Captures the profile or account associated with a social media URL.
+  - **URL Content Type**: If possible, extracts the type of content (e.g., video, post, reel, etc.).
+
+- **Language Detection**:
+  - **Language**: Identifies the language of the testimony.
+  - **Language_he**: Specifically detects Hebrew or English (עברית/ אנגלית).
+
+- **NER Entities**:
+  - **ORG**: Extracts organization entities from the title, subtitle, and testimony text.
+  - **ORG_TITLE**: Extracts organization entities only from the title, which can be useful to identify the source of the testimony.
+  - **PERS**: Extracts person entities from the title, subtitle, and testimony text.
+  - **PERS_TITLE**: Extracts person entities only from the title, which can be useful to identify the agent.
+  - **LOC**: Extracts location entities from the title, subtitle, and testimony text.
+  - **DATE**: Extracts date entities from the title, subtitle, and testimony text.
+  - **TIME**: Extracts time entities from the title, subtitle, and testimony text.
+
+- **Unique IDs**:
+  - For each LOC, PERS, and ORG entity, the model assigns a unique ID. 
+  - **Important Note**: Currently, each run generates new IDs. Future updates will include support to retrieve existing IDs from the database and only assign new IDs to previously unlisted entities.
+
+- **Keywords**:
+  - Based on a collected file of keywords, the model searches each testimony for matching keywords and adds them as an additional field.
 
 ---
 
