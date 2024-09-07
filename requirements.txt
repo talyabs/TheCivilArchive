@@ -193,3 +193,4 @@ Werkzeug==3.0.3
 wrapt==1.12.1
 yarl==1.9.2
 zipp==3.19.2
+oauth2client==4.1.3
