@@ -1,6 +1,6 @@
 import spacy
 import pandas as pd
-from TheCivilArchive.code.gcp_service_account import read_sheet
+from gcp_service_account import read_sheet
 from text_utils import *
 from constants import *
 import time
@@ -266,7 +266,7 @@ def hybrid_model(csv_path):
 
 if __name__ == "__main__":
     path = "data/data_archive - main.csv"
-    output_path = f"results/data_archive_with_entities_{current_date}.csv"
+    output_path = f"data_archive_with_entities_{current_date}.csv"
     df_output = hybrid_model(path)
 
     print(df_output.head(20))

@@ -8,7 +8,7 @@ import hashlib
 from constants import *
 from transformers import AutoModel, AutoTokenizer
 
-from TheCivilArchive.code.gcp_service_account import read_sheet
+from gcp_service_account import read_sheet
 
 tokenizer = AutoTokenizer.from_pretrained("dicta-il/dictabert-seg")
 model = AutoModel.from_pretrained(
@@ -517,10 +517,10 @@ def add_unique_ids_and_summary(df):
     org_summary_df = pd.DataFrame(org_summary)
 
     # Save summary dataframes to CSV
-    print("Saving summary dataframes to CSV, find it in results/ folder...")
-    pers_summary_df.to_csv("results/person_summary.csv", index=False)
-    loc_summary_df.to_csv("results/location_summary.csv", index=False)
-    org_summary_df.to_csv("results/organization_summary.csv", index=False)
+    print("Saving summary dataframes to CSV...")
+    pers_summary_df.to_csv("person_summary.csv", index=False)
+    loc_summary_df.to_csv("location_summary.csv", index=False)
+    org_summary_df.to_csv("organization_summary.csv", index=False)
 
     # Add unique IDs for PERS
     df["PERS_IDS"] = df["PERS"].apply(
