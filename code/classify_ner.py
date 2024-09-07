@@ -1,6 +1,6 @@
 import spacy
 import pandas as pd
-from gcp_service_account import read_sheet
+from TheCivilArchive.code.gcp_service_account import read_sheet
 from text_utils import *
 from constants import *
 import time

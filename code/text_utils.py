@@ -8,7 +8,7 @@ import hashlib
 from constants import *
 from transformers import AutoModel, AutoTokenizer
 
-from gcp_service_account import read_sheet
+from TheCivilArchive.code.gcp_service_account import read_sheet
 
 tokenizer = AutoTokenizer.from_pretrained("dicta-il/dictabert-seg")
 model = AutoModel.from_pretrained(
