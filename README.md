@@ -66,6 +66,8 @@ pip install -r requirements.txt
 
 3. The classified entities and summary files will be saved in the `results` folder.
 
+- For faster processing, it is recommended to run the model on a computer equipped with a GPU.
+
 ---
 
 ## Contact
