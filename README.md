@@ -32,6 +32,7 @@ This repository is dedicated to the Civil Archive project, focusing on Named Ent
 - **Note**: Please contact the repository owner to obtain the necessary GCP credentials for accessing the Google Sheets database.
 - Relevant code for Google Sheets access is in the file `gcp_service_account.py`.
 
+For more details on the project, you can refer to the [detailed report](https://drive.google.com/file/d/1nG3YjFcVaCNNzDjI6V9snKZhQi8KGM-t/view?usp=sharing).
 ---
 
 ## Synonyms Database
