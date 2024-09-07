@@ -91,13 +91,11 @@ def find_entities(df):
             for entity in title_doc.ents:
                 score = round(entity._.confidence_score, 2)
                 if entity.label_ == "PERS":
-                    # entity_name = segment_preposition_letters(entity.text)
-                    entity_name = entity.text
+                    entity_name = segment_preposition_letters(entity.text)
                     if len(entity_name.split()) >= 2 and score >= 0.6:
                         pers_from_title.append(entity_name)
                 if entity.label_ == "ORG":
-                    # entity_name = segment_preposition_letters(entity.text)
-                    entity_name = entity.text
+                    entity_name = segment_preposition_letters(entity.text)
                     if score >= 0.6:
                         org_from_title.append(entity_name)
 
@@ -187,9 +185,9 @@ def add_synonyms_to_entity_columns(df, entity_type, synonyms_df, field="text"):
 
 def synonyms_handeling(df):
     print("Reading organizations, locations, and person sheets...")
-    org_df = read_sheet("organizations")
-    loc_df = read_sheet("locations")
-    pers_df = read_sheet("person")
+    org_df = read_sheet("organizations_synonyms")
+    loc_df = read_sheet("locations_synonyms")
+    pers_df = read_sheet("person_synonyms")
 
     print("Adding synonyms to the relevant entity columns...")
     add_synonyms_to_entity_columns(df, "ORG", org_df)
@@ -258,7 +256,7 @@ def hybrid_model(csv_path):
     df = rulebased_entities(df)
     df = clean_text_add_id(df)
     df = add_keywords(df)
-    df = df.drop(columns=["text", "Unnamed: 33"])
+    df = df.drop(columns=["text", "Unnamed: 33", "title_text"])
     end = time.time()
     print(f"Time taken: {end - start} seconds")
     return df

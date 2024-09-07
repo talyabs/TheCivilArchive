@@ -39,7 +39,10 @@ This repository is dedicated to the Civil Archive project, focusing on Named Ent
 ## Synonyms Database
 
 - The synonyms used in the rule-based approach are stored in a Google Sheet. You can find the database here:
-  [Synonyms Google Sheet](https://docs.google.com/spreadsheets/d/1cdfq43IcbOaj7mUquVeiRWEBg_O6IsWOVO5SVeRmMlM/edit?gid=854247877#gid=854247877).
+  [Synonyms Google Sheet](https://docs.google.com/spreadsheets/d/1cdfq43IcbOaj7mUquVeiRWEBg_O6IsWOVO5SVeRmMlM/edit?gid=854247877#gid=854247877). The code reads automatically from this file. Make sure you have the credentials file.
+- In the sheet you find a file for each entity type: Location, Organization, Person (in this format location_synonyms, etc). If you want to add synonyms just add them in the relevant row (if exists), or in a new line. Each entity you will add under the `name` column will be added as entity in the "rulebased" phase of the algorithm (For ex. if you add ״ארגון צער בעלי חיים״ each testimony with this phrase weill get not this as ORG entity)
+- In the same sheet you can find the summary files: `person/location/organizations_ids`, there you can find an id to each entity.
+- To improve the algorithm there are "cleaning" files, for each entity type - Here you can mark `not` under `true_entity` if this entity should not classified as the entity type. You can also add new row if you saw a wrong entity.
 
 ---
 
@@ -74,6 +77,6 @@ pip install -r requirements.txt
 
 ## Contact
 
-For access to GCP credentials or any other inquiries, please contact the repository owner.
+For access to GCP credentials or any other inquiries, please contact the repository owner - talyatalyab@gmail.com
 
 ---
