@@ -18,11 +18,11 @@ SCORE_THRESHOLD = 0.6
 
 def organize_df(path):
     df = pd.read_csv(path)
-    relevant_column = "תוכן העדות בכתב (העתק או תמלול)"
+    testimony_col = "תוכן העדות בכתב (העתק או תמלול)"
     url_col = "קישור למקור (URL) / Identifier"
     url2 = "קישור לאתר / ערוץ (URL)"
     df.rename(
-        columns={relevant_column: "testimony", url_col: "url", url2: "url2"},
+        columns={testimony_col: "testimony", url_col: "url", url2: "url2"},
         inplace=True,
     )
     df = df.replace("״", '"', regex=False)
@@ -92,11 +92,11 @@ def find_entities(df):
                 score = round(entity._.confidence_score, 2)
                 if entity.label_ == "PERS":
                     entity_name = segment_preposition_letters(entity.text)
-                    if len(entity_name.split()) >= 2 and score >= 0.6:
+                    if len(entity_name.split()) >= 2 and score >= SCORE_THRESHOLD:
                         pers_from_title.append(entity_name)
                 if entity.label_ == "ORG":
                     entity_name = segment_preposition_letters(entity.text)
-                    if score >= 0.6:
+                    if score >= SCORE_THRESHOLD:
                         org_from_title.append(entity_name)
 
         # Process the entire text (title + testimony)
@@ -232,7 +232,7 @@ def hybrid_model(csv_path):
     end = time.time()
     print(f"Time taken: {end - start} seconds")
     print(f"Saving the DataFrame to a CSV file {output_path}...")
-    df_output.to_csv(output_path, index=False)
+    df.to_csv(output_path, index=False)
 
     return df
 
@@ -240,9 +240,6 @@ def hybrid_model(csv_path):
 if __name__ == "__main__":
     path = "data/data_archive - main.csv"
     df_output = hybrid_model(path)
-    df_output[100:150].to_csv(
-        "data_archive_with_entities_01-09-2021_sample.csv", index=False
-    )
 
 
 # TODO: If entity exist - do not add id
