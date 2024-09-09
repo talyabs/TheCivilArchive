@@ -13,9 +13,10 @@ current_date = now.strftime("%d-%m-%Y")
 start = time.time()
 nlp = spacy.load("he_ner_news_trf")
 
+SCORE_THRESHOLD = 0.6
+
 
 def organize_df(path):
-    # Load the DataFrame
     df = pd.read_csv(path)
     relevant_column = "תוכן העדות בכתב (העתק או תמלול)"
     url_col = "קישור למקור (URL) / Identifier"
@@ -26,7 +27,6 @@ def organize_df(path):
     )
     df = df.replace("״", '"', regex=False)
 
-    # Iterate over each row in the DataFrame
     df["text"] = df.apply(
         lambda row: (
             (row["Title"] + " " if not pd.isna(row["Title"]) else "")
@@ -61,7 +61,6 @@ def organize_df(path):
 
 
 def find_entities(df):
-    # Initialize lists to store entities by type
     org_entities = []
     orgs_title_entities = []
     pers_entities = []
@@ -86,6 +85,7 @@ def find_entities(df):
 
         pers_from_title = []
         org_from_title = []
+        # Entities from title only (For Agent, Publisher)
         if row["title_text"].strip():
             title_doc = nlp(row["title_text"])
             for entity in title_doc.ents:
@@ -107,6 +107,7 @@ def find_entities(df):
         times = []
         locs = []
 
+        # Entites from the entire text (including title)
         for entity in doc.ents:
             score = round(entity._.confidence_score, 2)
             if entity.label_ in ["PERS", "ORG", "LOC"]:
@@ -114,33 +115,27 @@ def find_entities(df):
             else:
                 entity_name = entity.text
 
-            if entity.label_ == "ORG" and score >= 0.6:
+            if entity.label_ == "ORG" and score >= SCORE_THRESHOLD:
                 orgs.append(entity_name)
-            elif entity.label_ == "PERS" and score >= 0.6:
+            elif entity.label_ == "PERS" and score >= SCORE_THRESHOLD:
                 pers.append(entity_name)
-            elif entity.label_ == "DATE" and score >= 0.6:
+            elif entity.label_ == "DATE" and score >= SCORE_THRESHOLD:
                 dates.append(entity_name)
-            elif entity.label_ == "TIME" and score >= 0.6:
+            elif entity.label_ == "TIME" and score >= SCORE_THRESHOLD:
                 times.append(entity_name)
-            elif entity.label_ == "LOC" and score >= 0.6:
+            elif entity.label_ == "LOC" and score >= SCORE_THRESHOLD:
                 locs.append(entity_name)
 
-        # Add PERS from title to both PERS_TITLE and PERS
         pers_title_entities.append(pers_from_title)
         orgs_title_entities.append(org_from_title)
 
-        # Append entities to their corresponding lists
         org_entities.append(orgs)
         pers_entities.append(pers)
         date_entities.append(dates)
         time_entities.append(times)
         loc_entities.append(locs)
 
-    # Make sure all lists are the same length as df
-    assert len(pers_entities) == len(df)
-    assert len(org_entities) == len(df)
-
-    # Set the extracted entities into the DataFrame
+    # Fields from the URL
     df[["URL Domain", "URL Title", "URL Profile", "URL Content Type"]] = df.apply(
         combine_url_info, axis=1
     )
@@ -156,30 +151,6 @@ def find_entities(df):
     df["TIME"] = time_entities
 
     return df
-
-
-def add_synonyms_to_entity_columns(df, entity_type, synonyms_df, field="text"):
-    """
-    Check if any of the names or synonyms in the synonyms_df are present in each row of the text column
-    and add the corresponding name to the relevant entity column (ORG, LOC, PERS).
-
-    Parameters:
-    - df: The DataFrame containing the text data.
-    - entity_type: The entity type column (e.g., "ORG", "LOC", "PERS").
-    - synonyms_df: The DataFrame containing the names and synonyms for the entities.
-    """
-    for _, row in synonyms_df.iterrows():
-        name = row["name"]
-        synonyms = (
-            row.dropna().tolist()
-        )  # Get all non-null values including the name itself
-        synonyms = [syn for syn in synonyms if syn]
-
-        # Check each row in the DataFrame
-        for index, text in df[field].iteritems():
-            if any(syn in text for syn in synonyms):
-                if name not in df.at[index, entity_type]:
-                    df.at[index, entity_type].append(name)
 
 
 def synonyms_handeling(df):
@@ -218,7 +189,7 @@ def clean_text_add_id(df, recreate_ids=False):
         lambda pers_list: [
             entity
             for entity in pers_list
-            if (len(entity.split()) >= 2 and entity not in specific_names)
+            if (len(entity.split()) >= 2 and entity not in specific_single_token_names)
         ]
         if pers_list is not None
         else []  # Handle NoneType by returning an empty list
@@ -249,6 +220,7 @@ def add_keywords(df):
 
 
 def hybrid_model(csv_path):
+    output_path = f"data_archive_with_entities_{current_date}.csv"
     df = organize_df(csv_path)
     df = find_entities(df)
     df = synonyms_handeling(df)
@@ -256,19 +228,21 @@ def hybrid_model(csv_path):
     df = clean_text_add_id(df)
     df = add_keywords(df)
     df = df.drop(columns=["text", "Unnamed: 33", "title_text"])
+
     end = time.time()
     print(f"Time taken: {end - start} seconds")
+    print(f"Saving the DataFrame to a CSV file {output_path}...")
+    df_output.to_csv(output_path, index=False)
+
     return df
 
 
 if __name__ == "__main__":
     path = "data/data_archive - main.csv"
-    output_path = f"data_archive_with_entities_{current_date}.csv"
     df_output = hybrid_model(path)
-
-    print(df_output.head(20))
-    print(f"Saving the DataFrame to a CSV file {output_path}...")
-    df_output.to_csv(output_path, index=False)
+    df_output[100:150].to_csv(
+        "data_archive_with_entities_01-09-2021_sample.csv", index=False
+    )
 
 
 # TODO: If entity exist - do not add id

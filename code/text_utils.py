@@ -17,50 +17,6 @@ model = AutoModel.from_pretrained(
 model.eval()
 
 
-def normalize_person_name(name, exclusions_list=[]):
-    # Return None if the name is in not_pers (assuming not_pers is defined elsewhere)
-    if name in not_pers:
-        return None
-
-    # Check if name contains any exclusion or starts with any exclusion
-    if any(exclusion in name for exclusion in exclusions_list) or name.startswith(
-        tuple(exclusions_list)
-    ):
-        return name
-
-    # Remove specific Hebrew letters from the start of the name
-    name = re.sub(r"^(ל|כש|ו)", "", name)
-    return name
-
-
-def normalize_location(name, exclusions_list=[]):
-    # for exclusion in exclusions_list:
-    #     if exclusion in name:
-    #         return exclusion
-    if any(exclusion in name for exclusion in exclusions_list) or name.startswith(
-        tuple(exclusions_list)
-    ):
-        return name
-    name = re.sub(r"-(?=\S)", " ", name)  # Replace dashes with spaces
-    name = re.sub(r"^(|ו|ל|ב|מ|מה)", "", name)
-    return name.strip()
-
-
-def normalize_org(name, exclusions_list=[]):
-    if name in not_org:
-        return
-    for exclusion in exclusions_list:
-        if exclusion in name:
-            return exclusion
-    name = re.sub(r"^(מה|וש|כשה|ל|ול|ו)", "", name)
-    return name
-
-
-def normalize_time(name, exclusions_list=[]):
-    name = re.sub(r"^(ב|בשעה|בשעות|בשעת)", "", name)
-    return name
-
-
 def segment_text(text_):
     # Assuming predict method is correctly applied to segment text
     segmented_text = model.predict([text_], tokenizer)
@@ -100,19 +56,19 @@ def segment_preposition_letters(entity_text):
             # Attach single-letter prepositions to the next token
             next_token = segmented_tokens[i + 1]
             cleaned_tokens.append(token + next_token)
-            i += 1  # Skip the next token as it has been combined
+            i += 1
         elif len(token) == 1 and token == "ה" and i < len(segmented_tokens) - 1:
             # If 'ה' is a standalone token, attach it to the next token
             next_token = segmented_tokens[i + 1]
             cleaned_tokens.append(token + next_token)
-            i += 1  # Skip the next token as it has been combined
+            i += 1
         elif token == "״":
             # Handle case where "״" is between two tokens, connect the previous and next token
             if i > 0 and i < len(segmented_tokens) - 1 and cleaned_tokens:
                 prev_token = cleaned_tokens.pop()  # Remove the last token
                 next_token = segmented_tokens[i + 1]
                 cleaned_tokens.append(prev_token + token + next_token)
-                i += 1  # Skip the next token as it has been combined
+                i += 1
             else:
                 cleaned_tokens.append(token)
         elif token == "'":
@@ -129,96 +85,28 @@ def segment_preposition_letters(entity_text):
             if i < len(segmented_tokens) - 1:
                 next_token = segmented_tokens[i + 1]
                 cleaned_tokens.append(token + next_token)
-                i += 1  # Skip the next token as it has been combined
+                i += 1
             else:
                 cleaned_tokens.append(token)
         elif token.startswith("'") or token.startswith("״"):
             # Handle cases where the token starts with geresh (' or ") and attach to the previous one
             if cleaned_tokens:
-                prev_token = cleaned_tokens.pop()  # Remove the last token
-                cleaned_tokens.append(
-                    prev_token + token
-                )  # Attach it to the current token
+                prev_token = cleaned_tokens.pop()
+                cleaned_tokens.append(prev_token + token)
         else:
             cleaned_tokens.append(token)
 
         i += 1
 
-    # Join tokens while making sure there are no extra spaces
     cleaned_entity = " ".join(cleaned_tokens).replace("־", "").strip()
-
-    # Further remove any double spaces that may have been introduced
     cleaned_entity = " ".join(cleaned_entity.split())
 
-    # If the entity ends with " ׳", attach it to the last word
     if cleaned_entity.endswith(" '"):
         parts = cleaned_entity.rsplit(" ", 1)
         if len(parts) == 2:
             cleaned_entity = parts[0] + "׳" + parts[1]
 
     return cleaned_entity.strip()
-
-
-def merge_entities(entities, normalize_func, exclusions=[]):
-    entity_dict = {}
-    for name, confidence in entities:
-        normalized_name = normalize_func(name, exclusions)
-        if normalized_name in entity_dict:
-            if confidence > entity_dict[normalized_name]:
-                entity_dict[normalized_name] = confidence
-        else:
-            entity_dict[normalized_name] = confidence
-    return list(entity_dict.items())
-
-
-def merge_names(entities, exclusions=[]):
-    full_name_dict = {}
-    surname_dict = {}
-    first_name_dict = {}
-
-    for name, confidence in entities:
-        normalized_name = normalize_person_name(name, exclusions)
-        if not normalized_name:  # Check if normalized_name is None or empty
-            continue
-        parts = normalized_name.split()
-        if len(parts) == 2:
-            first_name, surname = parts
-            full_name_dict[normalized_name] = max(
-                confidence, full_name_dict.get(normalized_name, 0)
-            )
-            first_name_dict[first_name] = max(
-                confidence, first_name_dict.get(first_name, 0)
-            )
-        elif len(parts) == 1:
-            single_name = parts[0]
-            if single_name in first_name_dict:
-                first_name_dict[single_name] = max(
-                    confidence, first_name_dict.get(single_name, 0)
-                )
-            else:
-                surname_dict[single_name] = max(
-                    confidence, surname_dict.get(single_name, 0)
-                )
-
-    for full_name in list(full_name_dict.keys()):
-        first_name, surname = full_name.split()
-        if surname in surname_dict:
-            full_name_dict[full_name] = max(
-                full_name_dict[full_name], surname_dict[surname]
-            )
-            del surname_dict[surname]
-        if first_name in first_name_dict:
-            full_name_dict[full_name] = max(
-                full_name_dict[full_name], first_name_dict[first_name]
-            )
-            del first_name_dict[first_name]
-
-    merged_entities = (
-        list(full_name_dict.items())
-        + list(surname_dict.items())
-        + list(first_name_dict.items())
-    )
-    return merged_entities
 
 
 def extract_valid_dates(dates):
@@ -355,10 +243,8 @@ def remove_date_from_name(name):
     cleaned_parts = []
 
     for part in parts:
-        if not re.match(
-            r"\d{1,2}[./]\d{1,2}[./]\d{2,4}", part
-        ):  # Check if the part is not a date
-            cleaned_parts.append(part.strip())  # Add non-date parts to cleaned_parts
+        if not re.match(r"\d{1,2}[./]\d{1,2}[./]\d{2,4}", part):
+            cleaned_parts.append(part.strip())
 
     name = " ".join(cleaned_parts)
     cleaned_name = name.replace("\u200f", "").strip()
@@ -367,7 +253,6 @@ def remove_date_from_name(name):
 
 def clean_text(text):
     if isinstance(text, list):
-        # Normalize quotation marks and remove dates
         text = [remove_date_from_name(word.replace('"', "״")) for word in text]
         text = [word.strip("״") for word in text]  # Remove leading or trailing ״
         text = [word.replace("'", "׳") for word in text]  # Standardize single quotes
@@ -378,12 +263,9 @@ def clean_text(text):
 
 def standardize_date(date_str):
     # Mapping special phrases to specific dates
-
-    # Check if the date_str matches a special mapping
     if date_str in special_mappings:
         return special_mappings[date_str]
 
-    # Remove unnecessary characters like extra spaces or commas
     date_str = date_str.strip().lower()
 
     # Check for exact dates like '11/12/2023' and convert to '11.12.2023'
@@ -403,7 +285,6 @@ def standardize_date(date_str):
         return None
 
     # Convert Hebrew date strings like '7 אוקטובר 2023' to '7.10.2023'
-
     match = re.match(r"(\d{1,2}) ([א-ת]+) (\d{4})", date_str)
     if match:
         day, month_name, year = match.groups()
@@ -431,7 +312,6 @@ def standardize_date(date_str):
         day, month = match.groups()
         return f"{day}.{month}.2023"
 
-    # Exclude invalid dates that do not match any of the patterns above
     return None
 
 
@@ -552,6 +432,30 @@ def generate_short_id(name):
     # Generate a short ID using the first 8 characters of an MD5 hash
     md5_hash = hashlib.md5(name.encode("utf-8")).hexdigest()
     return md5_hash[:10]
+
+
+def add_synonyms_to_entity_columns(df, entity_type, synonyms_df, field="text"):
+    """
+    Check if any of the names or synonyms in the synonyms_df are present in each row of the text column
+    and add the corresponding name to the relevant entity column (ORG, LOC, PERS).
+
+    Parameters:
+    - df: The DataFrame containing the text data.
+    - entity_type: The entity type column (e.g., "ORG", "LOC", "PERS").
+    - synonyms_df: The DataFrame containing the names and synonyms for the entities.
+    """
+    for _, row in synonyms_df.iterrows():
+        name = row["name"]
+        synonyms = (
+            row.dropna().tolist()
+        )  # Get all non-null values including the name itself
+        synonyms = [syn for syn in synonyms if syn]
+
+        # Check each row in the DataFrame
+        for index, text in df[field].iteritems():
+            if any(syn in text for syn in synonyms):
+                if name not in df.at[index, entity_type]:
+                    df.at[index, entity_type].append(name)
 
 
 def replace_synonyms(df, column_name, synonyms_file):
@@ -738,26 +642,15 @@ def final_cleaning(df):
 def get_unique_keywords(df):
     column_name = "מילות מפתח"
 
-    # Step 1: Drop rows where the column is NaN
     keywords = df[df[column_name].notna()][column_name]
-
-    # Step 2: Split the strings by comma and flatten the list
     all_keywords = keywords.str.split(",").explode()
-
-    # Step 3: Remove leading/trailing whitespace from each keyword
     all_keywords = all_keywords.str.strip()
-
-    # Step 4: Get the unique values
     unique_keywords = all_keywords.drop_duplicates()
-
-    # Step 5: Convert back to a list and return
     unique_keywords_list = unique_keywords.tolist()
+
     return unique_keywords_list
 
 
 def extract_keywords_from_text(text, keywords):
-    # Find the keywords that exist in the text
     found_keywords = [word for word in keywords if word in text]
-    return (
-        found_keywords if found_keywords else None
-    )  # Return None if no keywords are found
+    return found_keywords if found_keywords else None
